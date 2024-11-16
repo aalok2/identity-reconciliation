@@ -4,9 +4,11 @@ import { Sequelize, DataTypes } from "sequelize";
 import { Config } from "../config";
 import { fileURLToPath, pathToFileURL } from "url";
 
-// Define __filename and __dirname for ES modules
-const __filename = fileURLToPath(import.meta.url);
+
+// Define __filename and __dirname in a CommonJS-compatible way
+const __filename = path.resolve(process.argv[1]);
 const __dirname = path.dirname(__filename);
+
 
 const basename = path.basename(__filename);
 const db: { [key: string]: any } = {};
