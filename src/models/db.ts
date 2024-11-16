@@ -22,12 +22,12 @@ const sequelize: Sequelize = new Sequelize(
     dialect: "postgres",
     port: dbConfig.PORT,
     logging: false, // Disable SQL logging
-    // dialectOptions: {
-    //   ssl: {
-    //     require: true, // Enforce SSL for secure connections
-    //     rejectUnauthorized: false, // Accept self-signed certificates
-    //   },
-    // },
+    dialectOptions: {
+      ssl: {
+        require: true, // Enforce SSL for secure connections
+        rejectUnauthorized: false, // Accept self-signed certificates
+      },
+    },
   }
 );
 
