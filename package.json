@@ -125,5 +125,11 @@
     "@types/morgan": "^1.9.4",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.3"
+  },
+    "_moduleDirectories": [
+    "node_modules_custom"
+  ],
+  "_moduleAliases": {
+    "@src": "./dist"
   }
 }
