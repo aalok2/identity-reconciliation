@@ -13,7 +13,7 @@ export default class ContactsController
      */
     try {
       const response = await this.fetchContactDetails(req.body);
-      res.status(200).send(response);
+      res.status(200).send({ contact: response, success: true });
     } catch (err) {
       console.log(err);
       res
