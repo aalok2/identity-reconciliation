@@ -16,22 +16,22 @@ export default class ContactsService extends ContactsDb {
         []
       );
     } else {
-      const primaryContacts = contactDetails.filter(
+      const primaryContacts = contactDetails?.filter(
         (contact) => contact.linkPrecedence === ContactType.PRIMARY
       );
 
-      if (primaryContacts.length > 1) {
+      if (primaryContacts?.length > 1) {
         primaryContacts.sort(
           (a, b) =>
             new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
         await this.updateContactToSecondary(
-          primaryContacts[1].id,
-          primaryContacts[0].id
+          primaryContacts[1]?.id,
+          primaryContacts[0]?.id
         );
 
         const linkedContacts = await this.fetchRelatedContacts(
-          primaryContacts[0].id
+          primaryContacts[0]?.id
         );
 
         return this.collectContactInfo(primaryContacts[0].id, [

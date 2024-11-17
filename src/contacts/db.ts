@@ -1,39 +1,39 @@
 import { IIdentifyBody, IOrderDetails } from "./interface";
-import db from "../models/db";
-import { Sequelize, Op } from "sequelize";
+import dbClient from "../db";
 import { ContactType } from "./enum";
 
 export default class contactsDb {
   public fetchContactDetailsFromDb = async (body: IIdentifyBody) => {
     const { email, phoneNumber } = body;
-    let whereClause = {};
 
+    let whereClause = "";
     if (email && phoneNumber) {
-      whereClause = { [Op.or]: [{ email }, { phoneNumber }] };
+      whereClause = `WHERE contacts.email = '${email}' OR contacts."phoneNumber" = '${phoneNumber}'`;
     } else if (!email) {
-      whereClause = { phoneNumber };
+      whereClause = `WHERE contacts."phoneNumber" = '${phoneNumber}'`;
     } else if (!phoneNumber) {
-      whereClause = { email };
+      whereClause = `WHERE contacts.email = '${email}'`;
     }
-    console.log(Object.keys(db)); // Should include "Contacts"
-    const contactDetails = (await db.contacts.findAll({
-      where: whereClause,
-      raw: true,
-    })) as unknown as IOrderDetails[];
 
-    return contactDetails;
+    const query = `SELECT * FROM contacts ${whereClause}`;
+
+    console.log(query);
+
+    const { rows: contactDetails } = (await dbClient.query(query)) as any;
+
+    return contactDetails as IOrderDetails[];
   };
 
   public addAsPrimary = async (body: IIdentifyBody) => {
     const { email, phoneNumber } = body;
 
-    const primaryContact = await db.contacts.create({
-      phoneNumber,
-      email,
-      linkPrecedence: ContactType.PRIMARY,
-    });
+    const query = `INSERT INTO contacts ("phoneNumber", email, "linkPrecedence")
+      VALUES ('${phoneNumber}', '${email}', '${ContactType.PRIMARY}')
+      returning *
+    `;
 
-    return primaryContact;
+    const { rows } = (await dbClient.query(query)) as any;
+    return rows[0];
   };
 
   public createSecondaryContact = async (
@@ -41,39 +41,35 @@ export default class contactsDb {
     email: string,
     phoneNumber: number
   ) => {
-    const secondaryContact = await db.contacts.create({
-      linkedId,
-      phoneNumber,
-      email,
-      linkPrecedence: ContactType.SECONDARY,
-    });
+    const query = `
+      INSERT INTO contacts ("linkedId", "phoneNumber", email, "linkPrecedence")
+      VALUES ('${linkedId}', '${phoneNumber}', '${email}', '${ContactType.SECONDARY}')
+    `;
 
-    return secondaryContact.dataValues;
+    return dbClient.query(query) as any;
   };
 
   public updateContactToSecondary = async (
     contactId: number,
     linkedId: number
   ) => {
-    return await db.contacts.update(
-      {
-        linkPrecedence: ContactType.SECONDARY,
-        linkedId,
-      },
-      {
-        where: {
-          id: contactId,
-        },
-      }
-    );
+    const query = `
+  UPDATE contacts 
+  SET "linkPrecedence" = '${ContactType.SECONDARY}', "linkedId" = '${linkedId}'
+  WHERE id = '${contactId}';
+`;
+
+    await dbClient.query(query);
   };
 
   public fetchRelatedContacts = async (linkedId: number) => {
-    return await db.contacts.findAll({
-      where: {
-        linkedId,
-      },
-      raw: true,
-    });
+    const query = `
+      SELECT * FROM contacts
+      WHERE "linkedId" = '${linkedId}'
+    `;
+
+    const { rows: relatedContacts } = (await dbClient.query(query)) as any;
+
+    return relatedContacts;
   };
 }

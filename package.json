@@ -111,8 +111,8 @@
     "yn": "^3.1.1"
   },
   "scripts": {
-    "dev": "nodemon",
     "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
     "build": "npm install && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -122,10 +122,11 @@
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/morgan": "^1.9.4",
+    "@types/pg": "^8.11.10",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.3"
   },
-    "_moduleDirectories": [
+  "_moduleDirectories": [
     "node_modules_custom"
   ],
   "_moduleAliases": {
