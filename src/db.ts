@@ -13,7 +13,7 @@ const dbClient = new Pool({
   port: Number(DB_PORT),
   database: DB_DATABASE,
   ssl: {
-    rejectUnauthorized: true, // Use `true` in production for stricter security
+    rejectUnauthorized: true,
   },
 });
 
