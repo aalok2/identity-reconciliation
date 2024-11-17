@@ -17,11 +17,29 @@ export default class contactsDb {
 
     const query = `SELECT * FROM contacts ${whereClause}`;
 
-    console.log(query);
-
     const { rows: contactDetails } = (await dbClient.query(query)) as any;
 
-    return contactDetails as IOrderDetails[];
+    const linkedIds = contactDetails
+      ?.map((contact: { linkedId: any }) => contact?.linkedId)
+      .filter((contact: { linkedId: any }) => contact);
+
+    if (linkedIds?.length > 0) {
+      const primaryContactQuery = `SELECT * FROM contacts WHERE id = $1 `;
+
+      const relatedContacts = `SELECT * FROM contacts  WHERE "linkedId" = $1`;
+
+      const [primaryContactDetails, relartedSecondaryContactDetails] =
+        (await Promise.allSettled([
+          dbClient.query(primaryContactQuery, [linkedIds[0]]),
+          dbClient.query(relatedContacts, [linkedIds[0]]),
+        ])) as any;
+      return [
+        ...primaryContactDetails?.value?.rows,
+        ...relartedSecondaryContactDetails?.value?.rows,
+      ];
+    } else {
+      return contactDetails;
+    }
   };
 
   public addAsPrimary = async (body: IIdentifyBody) => {
@@ -48,14 +66,17 @@ export default class contactsDb {
     const query = `
       INSERT INTO contacts ("linkedId", "phoneNumber", email, "linkPrecedence")
       VALUES ($1, $2,$3,$4)
+      returning *
     `;
 
-    return dbClient.query(query, [
+    const { rows } = (await dbClient.query(query, [
       linkedId,
       phoneNumber,
       email,
       ContactType.SECONDARY,
-    ]) as any;
+    ])) as any;
+
+    return rows[0];
   };
 
   public updateContactToSecondary = async (
@@ -84,3 +105,4 @@ export default class contactsDb {
     return relatedContacts;
   };
 }
+

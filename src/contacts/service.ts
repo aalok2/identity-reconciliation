@@ -1,11 +1,13 @@
 import ContactsDb from "./db";
 import { ContactType } from "./enum";
-import { IIdentifyBody } from "./interface";
-
+import { IIdentifyBody, IOrderDetails } from "./interface";
+import { isEmpty } from "lodash";
 export default class ContactsService extends ContactsDb {
   public fetchContactDetails = async (body: IIdentifyBody) => {
     const { email, phoneNumber } = body;
-    const contactDetails = await this.fetchContactDetailsFromDb(body);
+    const contactDetails = (await this.fetchContactDetailsFromDb(
+      body
+    )) as unknown as IOrderDetails[];
 
     if (contactDetails?.length === 0) {
       const primaryContact = await this.addAsPrimary(body);
@@ -41,24 +43,33 @@ export default class ContactsService extends ContactsDb {
       } else {
         const primaryContact = primaryContacts[0];
         const isPrimaryMatch =
-          primaryContact.email === email &&
-          primaryContact.phoneNumber === phoneNumber;
+          primaryContact?.email === email &&
+          primaryContact?.phoneNumber === phoneNumber;
 
         if (isPrimaryMatch) {
           return this.collectContactInfo(primaryContact.id, contactDetails);
         } else {
           await this.createSecondaryContact(
-            primaryContact.id,
+            primaryContact?.id,
             email!,
             phoneNumber!
           );
           const linkedContacts = await this.fetchRelatedContacts(
-            primaryContact.id
+            primaryContacts[0]?.id
           );
-          return this.collectContactInfo(primaryContact.id, [
-            ...contactDetails,
-            ...linkedContacts,
-          ]);
+          const completeContactsSet = [...contactDetails, ...linkedContacts]
+            .reduce((acc, item) => {
+              acc.set(item.id, item);
+              return acc;
+            }, new Map())
+            .values();
+
+          const uniqueContactsList = Array.from(completeContactsSet);
+
+          return this.collectContactInfo(
+            primaryContact?.id,
+            uniqueContactsList
+          );
         }
       }
     }
@@ -83,11 +94,15 @@ export default class ContactsService extends ContactsDb {
     const phoneNumbers = new Set<string>();
     const secondaryContactIds: number[] = [];
 
-    contacts.forEach((contact) => {
-      emails.add(contact.email);
-      phoneNumbers.add(contact.phoneNumber);
+    contacts?.forEach((contact) => {
+      if (!isEmpty(contact?.email)) {
+        emails?.add(contact?.email);
+      }
+      if (!isEmpty(contact?.phoneNumber)) {
+        phoneNumbers?.add(contact?.phoneNumber);
+      }
       if (contact.linkPrecedence === ContactType.SECONDARY) {
-        secondaryContactIds.push(contact.id);
+        secondaryContactIds?.push(contact.id);
       }
     });
 

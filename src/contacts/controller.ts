@@ -17,7 +17,7 @@ export default class ContactsController
     } catch (err) {
       console.log(err);
       res
-        .status(600)
+        .status(500)
         .send({ success: false, message: "Internal ServerError.", err });
     }
   };
