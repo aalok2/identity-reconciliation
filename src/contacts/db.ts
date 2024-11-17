@@ -28,11 +28,15 @@ export default class contactsDb {
     const { email, phoneNumber } = body;
 
     const query = `INSERT INTO contacts ("phoneNumber", email, "linkPrecedence")
-      VALUES ('${phoneNumber}', '${email}', '${ContactType.PRIMARY}')
+      VALUES ($1, $2, $3)
       returning *
     `;
 
-    const { rows } = (await dbClient.query(query)) as any;
+    const { rows } = (await dbClient.query(query, [
+      phoneNumber,
+      email,
+      ContactType.PRIMARY,
+    ])) as any;
     return rows[0];
   };
 
@@ -43,10 +47,15 @@ export default class contactsDb {
   ) => {
     const query = `
       INSERT INTO contacts ("linkedId", "phoneNumber", email, "linkPrecedence")
-      VALUES ('${linkedId}', '${phoneNumber}', '${email}', '${ContactType.SECONDARY}')
+      VALUES ($1, $2,$3,$4)
     `;
 
-    return dbClient.query(query) as any;
+    return dbClient.query(query, [
+      linkedId,
+      phoneNumber,
+      email,
+      ContactType.SECONDARY,
+    ]) as any;
   };
 
   public updateContactToSecondary = async (
@@ -55,20 +64,22 @@ export default class contactsDb {
   ) => {
     const query = `
   UPDATE contacts 
-  SET "linkPrecedence" = '${ContactType.SECONDARY}', "linkedId" = '${linkedId}'
-  WHERE id = '${contactId}';
+  SET "linkPrecedence" = $1, "linkedId" = $2
+  WHERE id = $3;
 `;
 
-    await dbClient.query(query);
+    await dbClient.query(query, [ContactType.SECONDARY, linkedId, contactId]);
   };
 
   public fetchRelatedContacts = async (linkedId: number) => {
     const query = `
       SELECT * FROM contacts
-      WHERE "linkedId" = '${linkedId}'
+      WHERE "linkedId" = $1
     `;
 
-    const { rows: relatedContacts } = (await dbClient.query(query)) as any;
+    const { rows: relatedContacts } = (await dbClient.query(query, [
+      linkedId,
+    ])) as any;
 
     return relatedContacts;
   };
