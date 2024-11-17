@@ -15,8 +15,9 @@ export default class ContactsController
       const response = await this.fetchContactDetails(req.body);
       res.status(200).send(response);
     } catch (err) {
+      console.log(err);
       res
-        .status(500)
+        .status(600)
         .send({ success: false, message: "Internal ServerError.", err });
     }
   };
