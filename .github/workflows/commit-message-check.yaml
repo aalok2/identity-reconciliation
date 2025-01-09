@@ -1,0 +1,16 @@
+name: Commit Message Check
+
+on: [push, pull_request]
+
+jobs:
+  check-commit-messages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check Commit Messages
+        run: |
+          git log --format=%s -n 10 | grep -E '^(feat|fix|docs|style|refactor|perf|test|chore):' || exit 1
+        shell: bash
